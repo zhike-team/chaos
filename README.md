@@ -130,6 +130,8 @@ package.json -> package.json.template
 }
 ```
 
+> 为了防止和模板项目中可能存在的ejs文件冲突，我们使用 `<? ?>` 作为模板符号。
+
 准备好模板后，起一个模板名（如：palm），将其放入chaos的templates文件夹中：
 
 ```
