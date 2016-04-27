@@ -9,7 +9,7 @@
     - [4. 在新的环境部署](#4-在新的环境部署)
   - [目录说明](#目录说明)
   - [模块说明](#模块说明)
-    - [全局对象](#全局对象)
+    - [重要对象](#重要对象)
     - [路由](#路由)
     - [API服务](#api服务)
       - [响应](#响应)
@@ -134,19 +134,28 @@ pm2 start index.js --name <name: 以此名称在pm2中称呼此项目>
 - **bin/**: 存放加载、预处理类脚本
 - **src/**
     - **common/**
-        - **config.db.js**: 数据库连接配置，会加载到全局`config` 的`db`属性（`config.db`）
-        - **config.js**: 其他项目配置，会加载为全局`config`
-        - **constants.js**: 枚举等常量，会加载为全局`constants`
-        - **errors.js**: API错误代码，会加载为全局`errors`
-        - **global.js**: 加载全局对象的逻辑
+        - **cache.js**: 缓存服务，[redis client](https://github.com/NodeRedis/node_redis)
+        - **config.db.js**: 数据库连接配置
+        - **config.js**: 其他项目配置
+        - **constants.js**: 枚举等常量
+        - **db.js**: 数据库服务，[Sequelize client](https://github.com/sequelize/sequelize)
+        - **errors.js**: API错误代码
+        - **Exception.js**: 用于程序中抛出逻辑错误，new Exception(code, msg)
+        - **index.js**: 包含common中的所有模块，为对象解构赋值提供便利。
+        - **models.js**: 包含所有的[models模块](#模型)
+        - **oss.js**: [阿里云OSS服务](https://github.com/aliyun-UED/aliyun-sdk-js)
+        - **schemas.js**: 包含所有的schema
+        - **services.js**: 包含所有的[services模块](#API服务)
     - **lib/**
-        - **funcs.js**: 全局工具函数，会加载为全局`funcs`
         - **middlewares/**: 定义中间件，每个module导出为Express中间件函数（`function(req, res, next)`）
+        - **express.js**: express App对象，加载了常用中间件，其他中间件请在 src/server/index.js 中加载
+        - **funcs.js**: 全局工具函数
         - 还有其它非第三方依赖库。
     - **services/**: 定义API服务逻辑，[下面详述](#API服务)。
-    - **models/**: 定义模型层方法，导出包涵模型方法的Object。会导入各个Schema的`options.classMethods`，并生成Schema的类方法，[下面详述](#模型)。
+    - **models/**:
+        - **methods/**: 定义模型层方法，导出包涵模型方法的Object。[下面详述](#模型)。
         - **migrations/**: 定义数据库模型。
-        - **schemas/**: 数据模型定义，不需要自己写。加载时会在加载完 src/models 后，生成可用的模型对象加载到全局`models`中，schema定义则加载到全局的`schemas`中。
+        - **schemas/**: 数据模型定义，不需要自己写。
     - **routes/**: 定义路由规则，[下面详述](#路由)。
     - **server/**: 定义服务相关脚本。
 - **test/**: 存放测试代码
@@ -161,11 +170,10 @@ pm2 start index.js --name <name: 以此名称在pm2中称呼此项目>
 
 
 
-### 全局对象
+### 重要对象
 
-项目扩展了全局对象，以方便项目中的引用。
+项目里面有一些重要对象，在编写过程中可能经常用到。
 
-扩展了全局对象的以下属性：
 
 ```js
 // 共用数据及工具
@@ -174,7 +182,7 @@ config.db    // 数据库配置，定义在 src/common/config.db.js 中
 constants    // 枚举、常量，定义在 src/common/constants 中
 errors       // API错误代码，定义在 src/common/errors.js 中
 Exception    // API错误类，用于创建一个API错误。例子：new Exception(1, 'Ouch!');
-funcs        // 工具函数，定义在 src/common/funcs.js 中
+funcs        // 工具函数，定义在 src/lib/funcs.js 中
 
 // 第三方服务
 db           // sequelize instance
@@ -187,10 +195,19 @@ services     // API服务
 models       // 模型
 schemas      // 模型定义
 
-// 常用工具
-co
-thunkify
-request
+// How to import
+
+// 1. require common/xxx
+const db = require('./path/to/common/db');
+const oss = require('./path/to/common/oss');
+
+// 2. require common , common.xxx
+const config = require('./path/to/common').config;
+const { errors, Exception } = require('./path/to/common'); // >= Node.js 6.0.0
+
+// 3. services, modals can reference more directly.
+const services = require('./path/to/services');
+const models = require('./path/to/models');
 
 // examples
 if (status === constants.STATUS.NORMAL) {throw new Exception(1, '这里检查出了异常状态')}
@@ -210,12 +227,12 @@ user.password = funcs.md5(user.password);
 ```js
 // user.js
 module.exports = [
-  ['post', '/login', controllers.user, 'login'],
-  ['post', '/logout', controllers.user, 'logout'],
-  ['post', '/user', controllers.user, 'register'],
-  ['get', '/user', controllers.user, 'userInfo'],
-  ['post', '/user/:id/follow', controllers.user, 'follow'],
-  ['delete', '/user/:id/follow', controllers.user, 'unfollow']
+  ['post', '/login', services.user, 'login'],
+  ['post', '/logout', services.user, 'logout'],
+  ['post', '/user', services.user, 'register'],
+  ['get', '/user', services.user, 'userInfo'],
+  ['post', '/user/:id/follow', services.user, 'follow'],
+  ['delete', '/user/:id/follow', services.user, 'unfollow']
 ];
 ```
 
@@ -258,6 +275,12 @@ bookStore.js -> services.bookStore
 
 ```js
 // user.js
+// >= node.js 6.0.0
+const { models, Exception } = require('../common');
+// for node.js 4.x.x, 5.x.x
+const models = require('../models');
+const Exception = require('../common/Exception');
+
 module.exports = class Service {
   *login(req, params) {
     checkAccount(params.account);
@@ -293,7 +316,21 @@ module.exports = class Service {
 >
 > >   raw 选项开启时，服务接受与Express handler相同的参数`(req, res)`，但仍然需要是Generator函数。
 
+要引用API服务，使用services对象，该对象包含所有的API服务模块。
 
+```js
+let { services } = require('./path/to/common'); // recommended, but require >= node.js 6.0.0
+// or
+services = require('./path/to/services');
+// or
+services = require('./path/to/common/services');
+// or
+services = require('./path/to/common').services;
+
+// access api
+// example -- module: user, action: get
+services.user.get
+```
 
 #### 响应
 
@@ -323,9 +360,24 @@ module.exports = class Service {
 
 模型定义在 src/models 中。
 
-模型的定义分为 schema 和 classMethods。schema 定义一个模型的结构，classMethods 定义一个模型的行为。
+模型的定义分为 schema 和 class methods。schema 定义一个模型的结构，class methods 定义一个模型的行为。
+
+要引用模型，使用models对象：
 
 
+```js
+let { models } = require('./path/to/common'); // recommended, but require >= node.js 6.0.0
+// or
+models = require('./path/to/models');
+// or
+models = require('./path/to/common/models');
+// or
+models = require('./path/to/common').models;
+
+// access modal
+// example -- schema: user, class method: getUserById
+models.user.getUserById
+```
 
 #### Schema
 

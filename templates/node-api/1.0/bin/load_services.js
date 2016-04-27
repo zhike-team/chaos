@@ -3,10 +3,11 @@
 // 引用
 let fs = require('fs-extra');
 let path = require('path');
+let services = require('../src/common/services');
 
 // 加载controllers
 let traverse = function(cntPath) {
-  let dir = fs.readdirSync(cntPath);
+  let dir = fs.readdirSync(cntPath).filter(exclude(['index.js']));
 
   for (let i = 0; i < dir.length; i++) {
     if (fs.statSync(path.join(cntPath, dir[i])).isDirectory()) {
@@ -39,6 +40,12 @@ let traverse = function(cntPath) {
     }
   }
 };
+
+let exclude = function(excludings) {
+  return function(dir) {
+    return excludings.map(exc => dir !== exc).reduce((a, b) => a && b, true);
+  }
+}
 
 // 加载controllers
 traverse(path.join(__dirname, '../src/services'));

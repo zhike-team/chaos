@@ -33,6 +33,8 @@ module.exports = {
     prefix: ''
   },
 
+  db: require('./config.db.js').production,
+
   // 秘钥
   tower: '<?= randomstring.generate() ?>'
 };

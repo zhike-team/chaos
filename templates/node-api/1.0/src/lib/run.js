@@ -1,5 +1,9 @@
 'use strict';
 
+const co = require('co');
+const func = require('./func.js');
+const config = require('../common/config');
+
 // 引用
 let log = require('util').log;
 let multipart = require('co-multipart');

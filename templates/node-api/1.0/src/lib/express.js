@@ -1,5 +1,7 @@
 'use strict';
 
+const config = require('../common/config');
+
 let express = require('express');
 // 实例化
 let app = express();

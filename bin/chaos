@@ -133,11 +133,15 @@ console.log(color.cyan(`    Template Arguments: \n${Object.keys(templateArgs).ma
 
 // ensure project path is empty.
 // create it if not exists.
+
+/*
 if (!fs.emptyDirSync(projectPath)) {
   console.log(color.red('  Project folder should be empty. You can empty it or just delete this folder.'));
   console.log();
   return
 }
+*/
+
 console.log();
 console.log(`  ${projectPath}  ${color.green('OK')}`);
 console.log();

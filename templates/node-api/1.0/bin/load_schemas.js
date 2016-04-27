@@ -3,6 +3,7 @@
 // 引用
 let fs = require('fs-extra');
 let path = require('path');
+let schemas = require('../src/common/schemas');
 
 // 加载schemas
 let traverse = function(cntPath) {

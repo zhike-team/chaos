@@ -1,7 +1,7 @@
 'use strict';
 
 // 引用
-require('../common/global');
+const config = require('../common/config');
 let router = require('./router');
 
 // 实例化
@@ -21,4 +21,4 @@ process.on('uncaughtException', function(err) {
 
 // 启动监听
 app.listen(config.port);
-console.log('Chaos backend server start: ' + config.port);
+console.log(config.name + ' server start: ' + config.port);
