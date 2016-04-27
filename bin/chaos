@@ -1,0 +1,249 @@
+#!/usr/bin/env node
+
+'use strict';
+
+// includes
+const program = require('commander');
+const pkg = require('../package.json')
+const querystring = require('querystring');
+const fs = require('fs-extra');
+const path = require('path');
+const color = require('cli-color');
+const util = require('util');
+const ejs = require('ejs');
+
+// meta
+const version = pkg.version;
+const cwd = process.cwd();
+
+// arguments
+let name;
+let template;
+let templateVersion;
+let templateArgs;
+
+// argument parsers
+const parseArgs = (args) => {
+  return querystring.parse(args, ',');
+}
+
+// configure CLI
+program.on('--help', function(){
+  console.log('  Examples:');
+  console.log('');
+  console.log('    $ chaos node-api myapp');
+  console.log('    $ chaos node-api -v 1.1 myapp');
+  console.log('    $ chaos node-api -v 1.1 myapp -a port=3000,css=less');
+  console.log('');
+  console.log('  Template Arguments:');
+  console.log('');
+  console.log('    port        the port for the template');
+  console.log();
+});
+
+program
+  .version(version)
+  .usage('<template> [options] <name>')
+  .option('-v, --template-version <version>', 'specify template version (defaults to newest)')
+  .option('-a, --template-args <args>', 'args pass to template (example: --args port=3000,css=less)', parseArgs)
+  .option('-l, --list', 'list all templates')
+  .action((template_, name_) => {
+    template = typeof template_ === 'string'?template_:null;
+    name = typeof name_ === 'string'?name_:null;
+  })
+  .parse(process.argv);
+
+templateVersion = program.templateVersion;
+templateArgs = program.templateArgs;
+
+
+
+
+
+
+// start handling
+const displayHeader = `
+  =============================================
+
+      Chaos    -    Boilerplate Generator
+
+      by Zhike-tech           ver ${version}
+
+  =============================================
+`
+
+console.log(color.yellow(displayHeader));
+
+const templates = loadTemplates(path.join(__dirname, '../templates'));
+
+
+
+// if with -l, only list out available templates.
+if (program.list) {
+  console.log('Available ' + color.cyan('templates') + ' and its ' + color.blue('versions:'));
+  Object.keys(templates).forEach(temp => {
+    console.log();
+    console.log(color.cyan('- ' + temp));
+    let versions = Object.keys(templates[temp]);
+    versions.sort(versionSort).forEach((version, index, list) => {
+      if (index === list.length - 1) {
+        console.log(color.blue('  - ' + version) + ' (default)');
+      } else {
+        console.log(color.blue('  - ' + version));
+      }
+    })
+  });
+  console.log();
+  return;
+
+}
+
+// if template name or project name is not provided, show help.
+if (!template || !name) {
+  if (template || name) {
+    console.log(color.magenta('  Both template name and project name is required.'));
+  }
+  program.help(color.red);
+  return;
+}
+
+// if required template is not exists, tell user.
+if (!templates[template]) {
+  console.log(color.red(`  Template "${template}" is not available now. please run 'chaos -l' to show all available templates for now.`));
+  console.log();
+  return;
+}
+
+if (!templateVersion) {
+  templateVersion = newestVersion(templates[template]);
+}
+
+if (!templates[template][templateVersion]) {
+  console.log(color.red(`  Template "${template}" does not have version ${templateVersion} now. please run 'chaos -l' to show all available templates for now.`));
+  console.log();
+  return;
+}
+
+templateArgs = Object.assign(require('../template_args.js'), templateArgs, { name });
+const projectPath = path.join(cwd, name);
+
+console.log(color.magenta(`  Creating project "${name}" at ${projectPath}`));
+console.log(color.cyan(`    Template: ${template} (version: ${templateVersion})`));
+console.log(color.cyan(`    Template Arguments: \n${Object.keys(templateArgs).map(k => `\t${k} = ${templateArgs[k]}`).join('\n')}`));
+
+// ensure project path is empty.
+// create it if not exists.
+if (!fs.emptyDirSync(projectPath)) {
+  console.log(color.red('  Project folder should be empty. You can empty it or just delete this folder.'));
+  console.log();
+  return
+}
+console.log();
+console.log(`  ${projectPath}  ${color.green('OK')}`);
+console.log();
+
+
+// apply template.
+
+console.log('  Creating project files...');
+console.log();
+console.log('  '+[
+  color.yellow('[D] Ensure directory'),
+  color.cyan('[T] Render template file'),
+  color.green('[F] Copy file'),
+].join('    '));
+console.log();
+
+applyTemplate(templates[template][templateVersion], projectPath, 1);
+
+console.log();
+
+
+// end.
+
+console.log(color.magenta(`  Project "${name}" is created.`));
+console.log(color.magenta(`  Please read the 'README.md' first.`));
+
+console.log();
+
+
+
+// functions
+
+function applyTemplate(source, destination, indent) {
+  fs.ensureDirSync(destination);
+  console.log(color.yellow('  '.repeat(indent)+'[D] '+path.relative(cwd, destination)));
+  const files = fs.readdirSync(source).filter(filterSystemFile);
+  files.forEach(filename => {
+    const file = path.join(source, filename);
+    let fileDest = path.join(destination, filename);
+    if (fs.statSync(file).isDirectory()) {
+      // for directories, dive in.
+      applyTemplate(file, fileDest, indent+1);
+    } else {
+      // for files, check it's template file or not.
+      if (path.extname(file)==='.template') {
+        fileDest = fileDest.replace('.template', '');
+        // for template files, render and write.
+        const temp = fs.readFileSync(file, 'utf-8');
+        const rendered = ejs.render(temp, templateArgs, {delimiter: '?'});
+        fs.writeFileSync(fileDest, rendered, 'utf-8');
+        console.log(color.cyan('  '.repeat(indent+1)+'[T] '+path.relative(cwd, fileDest)));
+      } else {
+        // for normal files, copy
+        fs.copySync(file, fileDest);
+        console.log(color.green('  '.repeat(indent+1)+'[F] '+path.relative(cwd, fileDest)));
+      }
+    }
+  });
+}
+
+
+
+
+function loadTemplates(dir) {
+  let templates = {};
+  let templateNames = fs.readdirSync(dir).filter(filterFolders(dir));
+  templateNames.forEach(temp => {
+    templates[temp] = {};
+    let versions = fs.readdirSync(path.join(dir, temp)).filter(filterFolders(path.join(dir, temp)));;
+    versions.forEach(version => {
+      templates[temp][version] = path.join(dir, temp, version);
+    });
+  });
+  return templates;
+
+}
+function filterFolders(dir) {
+  return (name) => {
+    return !name.startsWith('.') && fs.statSync(path.join(dir, name)).isDirectory();
+  }
+}
+
+function filterSystemFile(name) {
+  const SYSTEM_FILES = ['.DS_Store'];
+  return SYSTEM_FILES.map(sf => sf!==name).reduce((a,b)=>a&&b, true);
+}
+
+function newestVersion(template) {
+  let versions = Object.keys(template);
+  versions = versions.sort(versionSort);
+  return versions.pop();
+}
+
+function versionSort(a,b) {
+  let va = versionParse(a);
+  let vb = versionParse(b);
+  for (let i = 0; i < Math.max(va.length, vb.length); i++) {
+    let ia = va[i] || 0;
+    let ib = vb[i] || 0;
+    if (ia !== ib) {
+      return ia - ib;
+    }
+  }
+  return 0;
+
+  function versionParse(text) {
+    return text.split('.').map(section => parseInt(section));
+  }
+}

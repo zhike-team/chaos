@@ -1,0 +1,32 @@
+
+{
+  "name": "<?= name ?>",
+  "dependencies": {
+    "aliyun-sdk": "^1.8.0",
+    "body-parser": "^1.14.1",
+    "co": "^4.6.0",
+    "co-multipart": "^2.0.0",
+    "compression": "^1.6.0",
+    "connect-timeout": "^1.7.0",
+    "cookie-parser": "^1.4.0",
+    "express": "^4.13.3",
+    "fs-extra": "^0.26.5",
+    "moment": "^2.11.1",
+    "pg": "^4.4.3",
+    "pg-hstore": "^2.3.2",
+    "redis": "^2.3.0",
+    "request": "^2.65.0",
+    "sequelize": "^3.13.0",
+    "thunkify-wrap": "^1.0.4"
+  },
+  "devDependencies": {
+    "chai": "^3.4.0"
+  },
+  "scripts": {
+    "start": "node index",
+    "test": "mocha",
+    "sync": "node bin/sync_schemas",
+    "migrate": "sequelize db:migrate --env production --migrations-path src/models/migrations --config src/common/config.db.js",
+    "migration:create": "sequelize --env production migration:create --migrations-path src/models/migrations --config src/common/config.db.js"
+  }
+}
