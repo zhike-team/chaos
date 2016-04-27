@@ -26,7 +26,11 @@ chaos node-api ssadmin -a port=8000 # 以默认监听8000端口建立项目
 
 ## 用法
 
-首先全局安装。。。
+首先全局安装
+
+```
+npm install -g zk-chaos
+```
 
 如果要在 projects 目录下建立 node.js API 项目 coconut ：
 

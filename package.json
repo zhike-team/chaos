@@ -1,12 +1,19 @@
 {
-  "name": "chaos",
-  "version": "1.0.0",
+  "name": "zk-chaos",
+  "version": "1.0.1",
   "description": "chaos - boilerplate generator",
   "main": "bin/chaos",
+  "bin": {
+    "chaos": "./bin/chaos"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
+  "author": "zhike",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/zhike-team/chaos.git"
+  },
   "license": "ISC",
   "dependencies": {
     "cli-color": "^1.1.0",
