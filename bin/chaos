@@ -1,15 +1,16 @@
 #!/usr/bin/env node
 
+/* eslint no-console: 0, prefer-template: 0 */
+
 'use strict';
 
 // includes
 const program = require('commander');
-const pkg = require('../package.json')
+const pkg = require('../package.json');
 const querystring = require('querystring');
 const fs = require('fs-extra');
 const path = require('path');
 const color = require('cli-color');
-const util = require('util');
 const ejs = require('ejs');
 
 // meta
@@ -25,10 +26,10 @@ let templateArgs;
 // argument parsers
 const parseArgs = (args) => {
   return querystring.parse(args, ',');
-}
+};
 
 // configure CLI
-program.on('--help', function(){
+program.on('--help', () => {
   console.log('  Examples:');
   console.log('');
   console.log('    $ chaos node-api myapp');
@@ -45,11 +46,12 @@ program
   .version(version)
   .usage('<template> [options] <name>')
   .option('-v, --template-version <version>', 'specify template version (defaults to newest)')
-  .option('-a, --template-args <args>', 'args pass to template (example: --args port=3000,css=less)', parseArgs)
+  .option('-a, --template-args <args>',
+          'args pass to template (example: --args port=3000,css=less)', parseArgs)
   .option('-l, --list', 'list all templates')
   .action((template_, name_) => {
-    template = typeof template_ === 'string'?template_:null;
-    name = typeof name_ === 'string'?name_:null;
+    template = typeof template_ === 'string' ? template_ : null;
+    name = typeof name_ === 'string' ? name_ : null;
   })
   .parse(process.argv);
 
@@ -70,7 +72,7 @@ const displayHeader = `
       by Zhike-tech           ver ${version}
 
   =============================================
-`
+`;
 
 console.log(color.yellow(displayHeader));
 
@@ -84,14 +86,14 @@ if (program.list) {
   Object.keys(templates).forEach(temp => {
     console.log();
     console.log(color.cyan('- ' + temp));
-    let versions = Object.keys(templates[temp]);
+    const versions = Object.keys(templates[temp]);
     versions.sort(versionSort).forEach((version, index, list) => {
       if (index === list.length - 1) {
         console.log(color.blue('  - ' + version) + ' (default)');
       } else {
         console.log(color.blue('  - ' + version));
       }
-    })
+    });
   });
   console.log();
   return;
@@ -109,6 +111,7 @@ if (!template || !name) {
 
 // if required template is not exists, tell user.
 if (!templates[template]) {
+  /* eslint max-len: 0 */
   console.log(color.red(`  Template "${template}" is not available now. please run 'chaos -l' to show all available templates for now.`));
   console.log();
   return;
@@ -151,7 +154,7 @@ console.log();
 
 console.log('  Creating project files...');
 console.log();
-console.log('  '+[
+console.log('  ' + [
   color.yellow('[D] Ensure directory'),
   color.cyan('[T] Render template file'),
   color.green('[F] Copy file'),
@@ -196,6 +199,8 @@ function applyTemplate(source, destination, indent) {
       } else {
         // for normal files, copy
         fs.copySync(file, fileDest);
+        // fix npm's .gitignore problem.
+        fileDest.replace('.npmignore', '.gitignore');
         console.log(color.green('  '.repeat(indent+1)+'[F] '+path.relative(cwd, fileDest)));
       }
     }
