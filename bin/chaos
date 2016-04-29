@@ -188,6 +188,9 @@ function applyTemplate(source, destination, indent) {
       // for directories, dive in.
       applyTemplate(file, fileDest, indent+1);
     } else {
+      // for files, first, fix npm's .gitignore problem.
+      fileDest = fileDest.replace('.npmignore', '.gitignore');
+      
       // for files, check it's template file or not.
       if (path.extname(file)==='.template') {
         fileDest = fileDest.replace('.template', '');
@@ -199,8 +202,6 @@ function applyTemplate(source, destination, indent) {
       } else {
         // for normal files, copy
         fs.copySync(file, fileDest);
-        // fix npm's .gitignore problem.
-        fileDest.replace('.npmignore', '.gitignore');
         console.log(color.green('  '.repeat(indent+1)+'[F] '+path.relative(cwd, fileDest)));
       }
     }
