@@ -1,7 +1,7 @@
 'use strict';
 
 // 引用
-let crypto = require('crypto');
+const crypto = require('crypto');
 
 // 生成MD5
 exports.md5 = function(data) {

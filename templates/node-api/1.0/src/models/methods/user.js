@@ -8,7 +8,7 @@ exports.associate = function() {
 };
 
 // 获取数据
-exports.getById = function*(id) {
-  let ret = yield this.findById(id);
+exports.getById = function *(id) {
+  const ret = yield this.findById(id);
   return ret;
 };

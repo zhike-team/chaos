@@ -1,10 +1,11 @@
 'use strict';
 
 // 引用
-let Router = require('../lib/router');
+const Router = require('../lib/router');
+const errors = require('../common/errors');
 
 // 路由
-let router = new Router(require('../routes'));
+const router = new Router(require('../routes'));
 
 // 设置
 module.exports = function(app) {
@@ -12,10 +13,10 @@ module.exports = function(app) {
   app.use(router.forExpress());
 
   // 404
-  app.get('*', function(req, res) {
+  app.get('*', (req, res) => {
     res.send({
       code: 2,
-      msg: errors[2]
+      msg: errors[2],
     });
   });
 };

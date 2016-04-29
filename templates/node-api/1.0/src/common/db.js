@@ -9,8 +9,8 @@ module.exports = new Sequelize(config.db.database, config.db.username, config.db
   port: config.db.port,
   timezone: '+08:00',
   pool: {
-    maxConnections: config.db.pool
+    maxConnections: config.db.pool,
   },
   omitNull: true,
-  logging: false
+  logging: false,
 });

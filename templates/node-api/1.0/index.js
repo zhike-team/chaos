@@ -1,3 +1,5 @@
+'use strict';
+
 // initialize
 require('./bin/load_schemas.js');
 require('./bin/load_models.js');

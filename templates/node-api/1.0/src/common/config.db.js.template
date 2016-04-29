@@ -9,6 +9,6 @@ module.exports = {
     port: 5432,
     pool: 10,
     prefix: '<?= name.toLowerCase() ?>_',
-    dialect: 'postgres'
+    dialect: 'postgres',
   }
 };

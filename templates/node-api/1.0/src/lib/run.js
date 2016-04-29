@@ -3,43 +3,45 @@
 const co = require('co');
 const func = require('./func.js');
 const config = require('../common/config');
+const thunkify = require('thunkify-wrap');
+const cache = require('../common/cache');
 
 // 引用
-let log = require('util').log;
-let multipart = require('co-multipart');
+const log = require('rainbowlog');
+const multipart = require('co-multipart');
 
 // 运行
 module.exports = function(action, options) {
   options = options || {};
 
-  return function(req, res, next) {
+  return function(req, res) {
     // 记录开始时间
-    let cntTime = new Date();
+    const cntTime = new Date();
 
     // 错误处理函数
-    let errorHandle = function(err) {
-      console.log(err.stack);
+    const errorHandle = function(err) {
+      log.error(err.stack);
       err.code = config.errorPrefix + (err.code || 1);
       res.send({
         code: err.code,
-        msg: err.msg || '未知错误'
+        msg: err.msg || '未知错误',
       });
     };
 
     // 不需要自动返回JSON
     if (options.raw) {
-      co(function*() {
-        yield action(req, res)
-      }).then(function() {}, errorHandle);
+      co(function *() {
+        yield action(req, res);
+      }).then(() => {}, errorHandle);
       return;
     }
 
     // 执行
-    co(function*() {
+    co(function *() {
       // 从缓存中读取数据
-      let key = func.md5(config.name + '.' + req.path + '.' + JSON.stringify(req.query));
+      const key = func.md5(`${config.name}.${req.path}.${JSON.stringify(req.query)}`);
       if (options.cache) {
-        let data = yield thunkify(cache.get).bind(cache)(key);
+        const data = yield thunkify(cache.get).bind(cache)(key);
         if (data !== null) {
           return JSON.parse(data);
         }
@@ -48,15 +50,15 @@ module.exports = function(action, options) {
       // 获取参数
       let params = Object.assign({}, req.method === 'GET' ? req.query : req.body, req.params);
       if (options.multipart) {
-        let parts = yield * multipart(req);
+        const parts = yield* multipart(req);
         params = parts.field;
-        parts.files.map(function(file) {
+        parts.files.map(file => {
           params[file.fieldname] = file;
         });
       }
 
       // 执行
-      let data = yield action(req, params);
+      const data = yield action(req, params);
 
       // 缓存数据
       if (options.cache) {
@@ -64,15 +66,15 @@ module.exports = function(action, options) {
       }
 
       return data;
-    }).then(function(data) {
+    }).then(data => {
       // 返回
       res.send({
         code: 0,
-        data: data
+        data: data,
       });
 
       // 记录时间
-      log(`${new Date().getTime() - cntTime.getTime()}ms - ${req.method} - ${req.url}`);
+      log.info(`${new Date().getTime() - cntTime.getTime()}ms - ${req.method} - ${req.url}`);
     }, errorHandle);
   };
 };

@@ -21,7 +21,7 @@ module.exports = {
   cache: {
     host: '127.0.0.1',
     port: 6379,
-    time: 60
+    time: 60,
   },
 
   // 阿里云
@@ -30,11 +30,11 @@ module.exports = {
     secret: '',
     endpoint: '',
     bucket: '',
-    prefix: ''
+    prefix: '',
   },
 
   db: require('./config.db.js').production,
 
   // 秘钥
-  tower: '<?= randomstring.generate() ?>'
+  tower: '<?= randomstring.generate() ?>',
 };

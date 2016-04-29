@@ -7,10 +7,10 @@ const Exception = require('../common/Exception.js');
 module.exports = class Controller {
   // 获取用户信息
   *getUser(req, params) {
-    let ret = yield models.user.getById(params.id);
+    const ret = yield models.user.getById(params.id);
     if (ret == null) {
       throw new Exception(2, '未找到该用户');
     }
-    return 'Hello, ' + ret.name;
+    return `Hello, ${ret.name}`;
   }
 };
