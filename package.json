@@ -1,6 +1,6 @@
 {
   "name": "zhike-chaos",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "chaos - boilerplate generator",
   "main": "bin/chaos",
   "bin": {

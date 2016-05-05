@@ -2,3 +2,5 @@ node_modules
 bower_components
 .DS_Store
 *.log
+src/common/config.js
+src/common/config.db.js
