@@ -1,0 +1,40 @@
+'use strict';
+
+// 配置文件
+module.exports = {
+  // 项目名
+  name: '<?= name ?>',
+
+  // 监听端口
+  port: <?= port ?>,
+
+  // 请求超时时间
+  timeout: 20,
+
+  // 默认每页显示数量
+  pageSize: 20,
+
+  // 错误前缀
+  errorPrefix: '<?= name.toUpperCase() ?>_',
+
+  // 缓存
+  cache: {
+    host: '127.0.0.1',
+    port: 6379,
+    time: 60,
+  },
+
+  // 阿里云
+  oss: {
+    key: '',
+    secret: '',
+    endpoint: '',
+    bucket: '',
+    prefix: '',
+  },
+
+  db: require('./config.db.js').production,
+
+  // 秘钥
+  tower: '<?= randomstring.generate() ?>',
+};

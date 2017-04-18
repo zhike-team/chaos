@@ -1,0 +1,14 @@
+'use strict';
+
+module.exports = {
+  production: {
+    username: '<?= name ?>',
+    password: '',
+    database: '<?= name ?>',
+    host: '127.0.0.1',
+    port: 5432,
+    pool: 10,
+    prefix: '<?= name.toLowerCase() ?>_',
+    dialect: 'postgres',
+  }
+};

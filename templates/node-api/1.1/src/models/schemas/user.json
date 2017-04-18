@@ -1,0 +1,26 @@
+{
+  "name": "user",
+  "attributes": {
+    "id": {
+      "type": "INTEGER",
+      "allowNull": false,
+      "defaultValue": "nextval(chaos_user_id_seq::regclass)",
+      "special": [],
+      "primaryKey": true,
+      "field": "id"
+    },
+    "name": {
+      "type": "CHARACTER VARYING",
+      "allowNull": true,
+      "defaultValue": null,
+      "special": [],
+      "primaryKey": false,
+      "field": "name"
+    }
+  },
+  "options": {
+    "tableName": "chaos_user",
+    "createdAt": false,
+    "updatedAt": false
+  }
+}
