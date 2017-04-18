@@ -1,9 +1,11 @@
 'use strict';
 /* eslint-disable */
 
+const prefix = require('../../common/config').db.prefix;
+
 module.exports = {
   up: function (queryInterface, Sequelize) {
-    return queryInterface.createTable('chaos_user', {
+    return queryInterface.createTable(`${prefix}user`, {
       id: {
         type: 'serial',
         primaryKey: true
@@ -13,6 +15,6 @@ module.exports = {
   },
 
   down: function (queryInterface, Sequelize) {
-    return queryInterface.dropTable('chaos_user');
+    return queryInterface.dropTable(`${prefix}user`);
   }
 };
