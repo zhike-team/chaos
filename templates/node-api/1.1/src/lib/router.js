@@ -8,12 +8,12 @@ const methods = require('methods').concat('all');
 module.exports = class Router {
   constructor(configure) {
     methods.forEach(method => {
-      this[method] = (path, actionsAndOptions) => {
+      this[method] = function(path, actionsAndOptions) {
         actionsAndOptions = Array.from(arguments).slice(1);
         this[method][path] = (this[method][path] || []).concat(actionsAndOptions);
       };
     });
-    this.use = (path, subRouterOrMiddlewares) => {
+    this.use = function(path, subRouterOrMiddlewares) {
       subRouterOrMiddlewares = Array.from(arguments).slice(1);
       if (subRouterOrMiddlewares.length > 0) {
         if (isGeneratorFunction(subRouterOrMiddlewares[0])) { // middleware
